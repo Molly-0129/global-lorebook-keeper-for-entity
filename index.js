@@ -7,7 +7,7 @@ import { world_info, selected_world_info, world_names } from "../../../world-inf
 import { getPresetManager } from "../../../preset-manager.js";
 
 const context = getContext();
-const extensionName = "Preset Lorebook Binder";
+const extensionName = "Preset Lorebook Binder"; // Per request, this remains in English.
 const extensionSettingsKey = 'presetLorebookBindings';
 
 let lastPresetForApi = {};
@@ -47,7 +47,6 @@ function handlePresetChange(event) {
     const bindings = loadSettings();
     const worldsToDeactivate = bindings[oldPresetName] || [];
     const worldsToActivate = bindings[newPresetName] || [];
-
     const baseGlobalWorlds = new Set(selected_world_info);
 
     worldsToDeactivate.forEach(worldName => {
@@ -55,7 +54,6 @@ function handlePresetChange(event) {
             baseGlobalWorlds.delete(worldName);
         }
     });
-
     worldsToActivate.forEach(worldName => {
         baseGlobalWorlds.add(worldName);
     });
@@ -74,7 +72,7 @@ function handlePresetChange(event) {
         context.saveSettingsDebounced();
         $('#world_info').val(finalLorebookIndices).trigger('change');
         context.eventSource.emit(context.eventTypes.WORLDINFO_SETTINGS_UPDATED);
-        toastr.success('Lorebooks updated based on preset.');
+        toastr.success('世界书已根据预设更新。');
     }
 
     lastPresetForApi[apiId] = newPresetName;
@@ -85,7 +83,7 @@ function showSettingsPanel() {
     const presetManager = getPresetManager();
     
     if (!presetManager) {
-        toastr.error("Could not find a preset manager for the current API.");
+        toastr.error("无法为当前API找到预设管理器。");
         return;
     }
 
@@ -100,34 +98,31 @@ function showSettingsPanel() {
     const panelHtml = `
         <div id="preset-binder-panel">
             <h2>${extensionName}</h2>
-            <p>绑定一个或多个世界书到预设。当预设被选中时，世界书将全局启用。</p>
+            <p>将一个或多个世界书绑定至一个预设。当该预设被选中时，绑定的世界书将被全局启用。</p>
             <div id="preset-binder-list">
                 ${bindingRows}
             </div>
-            <button id="preset-binder-add" class="menu_button fa-solid fa-plus" title="Add new binding"></button>
+            <button id="preset-binder-add" class="menu_button fa-solid fa-plus" title="添加新绑定"></button>
         </div>
     `;
 
-    context.callGenericPopup(panelHtml, 'text', null, { wide: true, okButton: 'Close' });
+    context.callGenericPopup(panelHtml, 'text', null, { wide: true, okButton: '关闭' });
 
-    // 【UI修正】为所有现有的多选框初始化select2，并指定dropdownParent
     $('.lorebook-select').select2({
         placeholder: '-- 请选择世界书 --',
         width: '100%',
         closeOnSelect: false,
-        dropdownParent: $('#preset-binder-panel') // <--- 这是关键的修正！
+        dropdownParent: $('#preset-binder-panel')
     });
 
     $('#preset-binder-add').on('click', () => {
         const newRowHtml = createBindingRow('', [], allPresets, allLorebooks);
         $('#preset-binder-list').append(newRowHtml);
-        
-        // 【UI修正】对新添加的行也进行同样的操作
         $('#preset-binder-list .preset-binder-row:last-child .lorebook-select').select2({
             placeholder: '-- 请选择世界书 --',
             width: '100%',
             closeOnSelect: false,
-            dropdownParent: $('#preset-binder-panel') // <--- 这是关键的修正！
+            dropdownParent: $('#preset-binder-panel')
         });
     });
 
@@ -137,7 +132,7 @@ function showSettingsPanel() {
         const selectedLorebooks = row.find('.lorebook-select').val();
 
         if (!selectedPreset || !selectedLorebooks || selectedLorebooks.length === 0) {
-            toastr.warning("请至少选择一个预设和一个世界书。");
+            toastr.warning("请选择一个预设和至少一个世界书。");
             return;
         }
         
@@ -152,7 +147,7 @@ function showSettingsPanel() {
         saveSettings(currentBindings);
         
         row.data('preset-key', selectedPreset);
-        toastr.success(`Binding saved for preset: ${selectedPreset}`);
+        toastr.success(`已为预设 ${selectedPreset} 保存绑定`);
     });
 
     $(document).off('click', '.preset-binder-delete').on('click', '.preset-binder-delete', function() {
@@ -166,7 +161,7 @@ function showSettingsPanel() {
         }
         
         row.remove();
-        toastr.info("Binding removed.");
+        toastr.info("绑定已移除。");
     });
 }
 
@@ -177,29 +172,81 @@ function createBindingRow(preset, lorebookArray, allPresets, allLorebooks) {
     return `
         <div class="preset-binder-row" data-preset-key="${preset || ''}">
             <select class="preset-select text_pole">
-                <option value="">-- 选择预设 --</option>
+                <option value="">-- 请选择预设 --</option>
                 ${presetOptions}
             </select>
             <i class="fa-solid fa-arrow-right-long"></i>
             <select class="lorebook-select text_pole" multiple>
                 ${lorebookOptions}
             </select>
-            <button class="preset-binder-save menu_button fa-solid fa-save" title="保存绑定"></button>
-            <button class="preset-binder-delete menu_button fa-solid fa-trash" title="删除绑定"></button>
+            <div class="binder-buttons">
+                <button class="preset-binder-save menu_button fa-solid fa-save" title="保存绑定"></button>
+                <button class="preset-binder-delete menu_button fa-solid fa-trash" title="删除绑定"></button>
+            </div>
         </div>
     `;
 }
 
-// 插件初始化
 $(document).ready(function () {
     const floatingButtonHtml = `
-        <div id="preset-binder-FAB" title="Open Preset Lorebook Binder">
+        <div id="preset-binder-FAB" title="打开预设-世界书绑定器">
             <i class="fa-solid fa-link"></i>
         </div>
     `;
-
     $('body').append(floatingButtonHtml);
-    $('#preset-binder-FAB').on('click', showSettingsPanel);
+
+    const fab = $('#preset-binder-FAB');
+    let isDragging = false;
+    let hasDragged = false;
+    let offsetX, offsetY;
+
+    const doDrag = (event) => {
+        if (!isDragging) return;
+        hasDragged = true;
+
+        const touch = event.type.startsWith('touch') ? event.originalEvent.touches[0] : event;
+        let newX = touch.clientX - offsetX;
+        let newY = touch.clientY - offsetY;
+
+        const screenWidth = $(window).width();
+        const screenHeight = $(window).height();
+        newX = Math.max(0, Math.min(newX, screenWidth - fab.outerWidth()));
+        newY = Math.max(0, Math.min(newY, screenHeight - fab.outerHeight()));
+
+        fab.css({ top: `${newY}px`, left: `${newX}px`, right: 'auto', bottom: 'auto' });
+    };
+
+    const endDrag = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        fab.removeClass('dragging');
+        
+        $(document).off('mousemove.fabdrag touchmove.fabdrag');
+        $(document).off('mouseup.fabdrag touchend.fabdrag');
+
+        if (!hasDragged) {
+            showSettingsPanel();
+        }
+    };
+
+    const startDrag = (event) => {
+        isDragging = true;
+        hasDragged = false;
+        fab.addClass('dragging');
+
+        const touch = event.type.startsWith('touch') ? event.originalEvent.touches[0] : event;
+        const rect = fab[0].getBoundingClientRect();
+        
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
+
+        event.preventDefault();
+
+        $(document).on('mousemove.fabdrag touchmove.fabdrag', doDrag);
+        $(document).on('mouseup.fabdrag touchend.fabdrag', endDrag);
+    };
+
+    fab.on('mousedown.fabdrag touchstart.fabdrag', startDrag);
 
     $(document).on('change', 'select[data-preset-manager-for]', handlePresetChange);
     

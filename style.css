@@ -19,23 +19,26 @@
     padding: 5px;
 }
 
-.preset-binder-row .preset-select,
-.preset-binder-row .lorebook-select {
-    flex: 1;
+.preset-binder-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto auto;
+    gap: 10px;
+    align-items: center;
 }
 
 .preset-binder-row .fa-arrow-right-long {
     font-size: 1.2em;
 }
 
-#preset-binder-add {
-    align-self: flex-end;
+.binder-buttons {
+    display: flex;
+    gap: 5px;
 }
 
 /* Floating Action Button (FAB) styles - MOVED TO TOP-RIGHT */
 #preset-binder-FAB {
     position: fixed;
-    top: 80px; /* 从顶部定位 */
+    top: 80px;
     right: 25px;
     width: 50px;
     height: 50px;
@@ -46,20 +49,54 @@
     justify-content: center;
     align-items: center;
     font-size: 20px;
-    cursor: pointer;
+    cursor: grab; /* 初始光标为“抓取” */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     z-index: 1050;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    user-select: none; /* 防止拖动时选中文本 */
 }
 
 #preset-binder-FAB:hover {
     background-color: #555a63;
 }
 
-/* 修正 #2: 使用grid布局解决选择框大小不一的问题 */
-.preset-binder-row {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr auto auto; /* 两个选择框平分空间，其他元素自适应 */
-    gap: 10px;
-    align-items: center;
+#preset-binder-FAB.dragging {
+    cursor: grabbing; /* 拖动时光标为“抓取中” */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05);
+}
+
+
+/* ########## MOBILE RESPONSIVE STYLES ########## */
+@media (max-width: 768px) {
+
+    /* 1. 让悬浮按钮在手机上变小 */
+    #preset-binder-FAB {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        top: 70px;
+        right: 15px;
+    }
+
+    /* 2. 让设置面板的每一行垂直排列，防止按钮被挤出去 */
+    .preset-binder-row {
+        display: flex;
+        flex-direction: column; /* 垂直堆叠 */
+        gap: 10px;
+        padding: 10px;
+        border: 1px solid #444;
+        border-radius: 5px;
+    }
+
+    /* 隐藏桌面端用于对齐的箭头图标 */
+    .preset-binder-row .fa-arrow-right-long {
+        display: none;
+    }
+
+    /* 让按钮组靠右对齐 */
+    .binder-buttons {
+        align-self: flex-end;
+        margin-top: 5px;
+    }
 }
