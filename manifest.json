@@ -1,0 +1,14 @@
+{
+    "display_name": "Global Lorebook Keeper for Entity",
+    "name": "preset-lorebook-binder",
+    "loading_order": 100,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "sleepyfish",
+    "version": "1.0.0",
+    "homePage": "",
+    "auto_update": true,
+    "description": "给恶灵用的绑定全局世界书插件"
+}
