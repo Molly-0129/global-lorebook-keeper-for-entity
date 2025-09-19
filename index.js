@@ -1,5 +1,5 @@
-// Global Lorebook Keeper for Entity - v1.0
-// 091825
+// Global Lorebook Keeper for Entity - v1.01
+// 091925
 // sleepyfish
 
 import { getContext, extension_settings } from "../../../extensions.js";
@@ -7,7 +7,7 @@ import { world_info, selected_world_info, world_names } from "../../../world-inf
 import { getPresetManager } from "../../../preset-manager.js";
 
 const context = getContext();
-const extensionName = "Preset Lorebook Binder"; // Per request, this remains in English.
+const extensionName = "预设世界书绑定器";
 const extensionSettingsKey = 'presetLorebookBindings';
 
 let lastPresetForApi = {};
@@ -187,69 +187,45 @@ function createBindingRow(preset, lorebookArray, allPresets, allLorebooks) {
     `;
 }
 
+// 【UI集成最终方案】
 $(document).ready(function () {
-    const floatingButtonHtml = `
-        <div id="preset-binder-FAB" title="打开预设-世界书绑定器">
-            <i class="fa-solid fa-link"></i>
-        </div>
-    `;
-    $('body').append(floatingButtonHtml);
+    let menuItemAdded = false;
 
-    const fab = $('#preset-binder-FAB');
-    let isDragging = false;
-    let hasDragged = false;
-    let offsetX, offsetY;
-
-    const doDrag = (event) => {
-        if (!isDragging) return;
-        hasDragged = true;
-
-        const touch = event.type.startsWith('touch') ? event.originalEvent.touches[0] : event;
-        let newX = touch.clientX - offsetX;
-        let newY = touch.clientY - offsetY;
-
-        const screenWidth = $(window).width();
-        const screenHeight = $(window).height();
-        newX = Math.max(0, Math.min(newX, screenWidth - fab.outerWidth()));
-        newY = Math.max(0, Math.min(newY, screenHeight - fab.outerHeight()));
-
-        fab.css({ top: `${newY}px`, left: `${newX}px`, right: 'auto', bottom: 'auto' });
-    };
-
-    const endDrag = () => {
-        if (!isDragging) return;
-        isDragging = false;
-        fab.removeClass('dragging');
-        
-        $(document).off('mousemove.fabdrag touchmove.fabdrag');
-        $(document).off('mouseup.fabdrag touchend.fabdrag');
-
-        if (!hasDragged) {
-            showSettingsPanel();
+    function addExtensionMenuItem() {
+        // 防止重复添加
+        if (menuItemAdded || $('#preset-binder-menu-item').length > 0) {
+            return;
         }
-    };
 
-    const startDrag = (event) => {
-        isDragging = true;
-        hasDragged = false;
-        fab.addClass('dragging');
+        // 确保“魔术棒”菜单容器已存在
+        if ($('#extensionsMenu').length === 0) {
+            return; 
+        }
 
-        const touch = event.type.startsWith('touch') ? event.originalEvent.touches[0] : event;
-        const rect = fab[0].getBoundingClientRect();
+        const menuItemHtml = `
+            <a id="preset-binder-menu-item" class="dropdown-item">
+                <i class="fa-solid fa-fw fa-link"></i>
+                <span>${extensionName}</span>
+            </a>
+        `;
+
+        $('#extensionsMenu').append(menuItemHtml);
+        $('#preset-binder-menu-item').on('click', showSettingsPanel);
         
-        offsetX = touch.clientX - rect.left;
-        offsetY = touch.clientY - rect.top;
+        menuItemAdded = true;
+        console.log(`${extensionName}: Menu item added to extensions wand menu.`);
+    }
 
-        event.preventDefault();
+    // 监听 'chat_changed' 事件，这是一个非常可靠的UI就绪信号
+    context.eventSource.on(context.eventTypes.CHAT_CHANGED, addExtensionMenuItem);
+    
+    // 同时也尝试在文档就绪时执行一次，作为备用方案
+    addExtensionMenuItem();
 
-        $(document).on('mousemove.fabdrag touchmove.fabdrag', doDrag);
-        $(document).on('mouseup.fabdrag touchend.fabdrag', endDrag);
-    };
-
-    fab.on('mousedown.fabdrag touchstart.fabdrag', startDrag);
-
+    // 监听预设变化
     $(document).on('change', 'select[data-preset-manager-for]', handlePresetChange);
     
+    // 初始化时记录当前预设
     $('select[data-preset-manager-for]').each(function() {
         const apiId = $(this).data('preset-manager-for');
         lastPresetForApi[apiId] = $(this).find('option:selected').text();
