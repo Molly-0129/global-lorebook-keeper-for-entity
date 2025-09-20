@@ -7,7 +7,7 @@
     "js": "index.js",
     "css": "style.css",
     "author": "sleepyfish",
-    "version": "1.0.1",
+    "version": "1.1",
     "homePage": "https://github.com/Molly-0129/global-lorebook-keeper-for-entity",
     "auto_update": true,
     "description": "给恶灵用的绑定全局世界书插件"
